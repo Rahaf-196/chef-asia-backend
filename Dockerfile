@@ -19,17 +19,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy all project files
 COPY . /var/www/html
 
-# ✅ Rename public folder to public_html (Render expects this)
-RUN mv public public_html
-
-# ✅ Change Apache DocumentRoot to public_html
-RUN sed -i 's!/var/www/html!/var/www/html/public_html!g' /etc/apache2/sites-available/000-default.conf
+# Fix bootstrap/cache permissions
+RUN mkdir -p /var/www/html/bootstrap/cache && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
-
-# Fix bootstrap/cache permissions
-RUN mkdir -p /var/www/html/bootstrap/cache && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Fix all permissions
 RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
