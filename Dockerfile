@@ -1,10 +1,7 @@
-# Use official PHP image
+# Use official PHP with Apache
 FROM php:8.2-apache
 
-# Set working directory
-WORKDIR /var/www/html
-
-# Install dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -13,21 +10,29 @@ RUN apt-get update && apt-get install -y \
     zip \
     && docker-php-ext-install zip pdo pdo_mysql
 
+# Set working directory
+WORKDIR /var/www/html
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy app files
+# Copy all project files
 COPY . /var/www/html
+
+# Change Apache DocumentRoot to public
+RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Fix permissions
+RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Set permissions
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
-    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Expose port
+# Expose port 80
 EXPOSE 80
 
-# ✅ Serve from public directory (this fixes the issue)
+# Start Apache
 CMD ["apache2-foreground"]
