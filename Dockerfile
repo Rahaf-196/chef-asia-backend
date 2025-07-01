@@ -35,5 +35,6 @@ RUN chmod -R 775 storage bootstrap/cache \
 EXPOSE 80
 
 # بدء Apache
+RUN php artisan route:clear
 RUN php artisan config:clear
 CMD ["apache2-foreground"]
