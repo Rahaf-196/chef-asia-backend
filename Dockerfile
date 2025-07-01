@@ -1,4 +1,3 @@
-# Use official PHP with Apache
 FROM php:8.2-apache
 
 # Install system dependencies
@@ -10,23 +9,30 @@ RUN apt-get update && apt-get install -y \
     zip \
     && docker-php-ext-install zip pdo pdo_mysql
 
-# Set working directory
-WORKDIR /var/www/html
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Set working directory
+WORKDIR /var/www/html
+
 # Copy all project files
 COPY . /var/www/html
 
-# Fix bootstrap/cache permissions
-RUN mkdir -p /var/www/html/bootstrap/cache && chmod -R 775 /var/www/html/bootstrap/cache
+# Set correct DocumentRoot to /var/www/html/public
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Allow .htaccess overrides
+RUN echo '<Directory /var/www/html/public>\n\
+    AllowOverride All\n\
+</Directory>' >> /etc/apache2/apache2.conf
 
-# Fix all permissions
-RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
+# Fix permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
