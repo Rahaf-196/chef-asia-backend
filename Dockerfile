@@ -1,16 +1,9 @@
-# Use official PHP image with Apache
 FROM php:8.2-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    git unzip zip curl libpng-dev libonig-dev libxml2-dev libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -19,19 +12,17 @@ RUN a2enmod rewrite
 WORKDIR /var/www/html
 
 # Copy existing application directory contents
-COPY . .
-
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Create missing Laravel directories to prevent chown errors
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache
+COPY . /var/www/html
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage
 
-# Install PHP dependencies without dev
-RUN composer install --no-dev --optimize-autoloader
+# Set DocumentRoot to /public
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
 # Expose port 80
 EXPOSE 80
+
+# Start Apache
+CMD ["apache2-foreground"]
