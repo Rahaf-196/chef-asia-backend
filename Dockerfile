@@ -25,5 +25,9 @@ RUN composer install --no-dev --optimize-autoloader
 # Set permissions
 RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
     chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
 # Expose port
 EXPOSE 80
+
+# ✅ Serve from public directory (this fixes the issue)
+CMD ["apache2-foreground"]
