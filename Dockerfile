@@ -31,8 +31,8 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data /var/www/html
 
-# فتح المنفذ
+# فتح المنفذ 80
 EXPOSE 80
 
-# بدء Apache بعد تنظيف كاش Laravel
+# ✅ تشغيل Laravel commands أثناء التشغيل، مش أثناء الـ build
 CMD php artisan config:clear && php artisan route:clear && apache2-foreground
