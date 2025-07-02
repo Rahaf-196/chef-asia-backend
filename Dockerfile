@@ -2,37 +2,41 @@ FROM php:8.2-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    unzip \
     git \
-    curl \
-    libzip-dev \
+    unzip \
     zip \
-    && docker-php-ext-install zip pdo pdo_mysql
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    curl \
+    libcurl4-openssl-dev \
+    && docker-php-ext-install pdo pdo_mysql zip
 
-# Enable Apache mod_rewrite
+# Enable Apache rewrite module
 RUN a2enmod rewrite
 
-# نسخ إعدادات Apache
-COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
-
-# نسخ Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# ضبط مجلد العمل
+# Set working directory
 WORKDIR /var/www/html
 
-# نسخ ملفات المشروع
-COPY . .
+# Copy project files
+COPY . /var/www/html
 
-# تثبيت الحزم
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage
+
+# Copy Apache vhost config
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# إعطاء صلاحيات للمجلدات المهمة
-RUN chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html
+# Cache Laravel config
+RUN php artisan config:cache
 
-# فتح المنفذ 80
 EXPOSE 80
-
-# ✅ تشغيل Laravel commands أثناء التشغيل، مش أثناء الـ build
-CMD php artisan config:clear && php artisan route:clear && apache2-foreground
+CMD ["apache2-foreground"]
