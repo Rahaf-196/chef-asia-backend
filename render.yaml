@@ -3,8 +3,8 @@ services:
     name: chef-asia-backend
     env: docker
     plan: free
-    buildCommand: "composer install --no-dev --optimize-autoloader"
-    startCommand: "apache2-foreground"
+    dockerfilePath: ./Dockerfile
+    startCommand: php artisan serve --host=0.0.0.0 --port=8000
     envVars:
       - key: APP_ENV
         value: production
