@@ -17,7 +17,7 @@ use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 | Public Routes
 |--------------------------------------------------------------------------
 */
-
+Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/test', function () {
     return response()->json(['message' => 'API is working']);
 });
