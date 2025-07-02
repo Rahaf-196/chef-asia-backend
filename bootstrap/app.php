@@ -1,4 +1,5 @@
 <?php
+dd('api.php is loaded');
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
